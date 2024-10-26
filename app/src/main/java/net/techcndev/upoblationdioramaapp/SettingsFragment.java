@@ -208,14 +208,14 @@ public class SettingsFragment extends Fragment {
 
         // Google sign out
         signInClient.signOut().addOnCompleteListener(requireActivity(),
-                new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        editor.putString("user_device", "");
-                        editor.commit();
-                        showDialog(DialogType.SUCCESS, "Sign-out Success", "You have successfully signed out.", Animation.POP, true, "OK");
-                    }
-                });
+        new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                editor.putString("user_device", "");
+                editor.commit();
+                showDialog(DialogType.SUCCESS, "Sign-out Success", "You have successfully signed out.", Animation.POP, true, "OK");
+            }
+        });
     }
 
     private void showDialog (com.nordan.dialog.DialogType dialogType, String title,

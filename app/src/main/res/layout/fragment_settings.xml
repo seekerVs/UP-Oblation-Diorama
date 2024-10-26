@@ -121,54 +121,54 @@
                 app:layout_constraintTop_toTopOf="@+id/emailTitleTextview" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:layout_marginTop="15dp"
-            android:text="General"
-            android:textColor="#9A948D"
-            android:textSize="12sp"
-            android:textStyle="bold"/>
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="start"-->
+<!--            android:layout_marginTop="15dp"-->
+<!--            android:text="General"-->
+<!--            android:textColor="#9A948D"-->
+<!--            android:textSize="12sp"-->
+<!--            android:textStyle="bold"/>-->
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/NotifLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/greyroundbg"
-            android:gravity="center"
-            android:paddingStart="30dp"
-            android:paddingTop="7dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="7dp">
+<!--        <androidx.constraintlayout.widget.ConstraintLayout-->
+<!--            android:id="@+id/NotifLayout"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginTop="10dp"-->
+<!--            android:background="@drawable/greyroundbg"-->
+<!--            android:gravity="center"-->
+<!--            android:paddingStart="30dp"-->
+<!--            android:paddingTop="7dp"-->
+<!--            android:paddingEnd="20dp"-->
+<!--            android:paddingBottom="7dp">-->
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Notification"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/notificationSwitch"
-                app:layout_constraintHorizontal_bias="0.021"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginStart="8dp"-->
+<!--                android:text="Notification"-->
+<!--                android:textColor="@color/black"-->
+<!--                android:textSize="14sp"-->
+<!--                android:textStyle="bold"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintEnd_toStartOf="@+id/notificationSwitch"-->
+<!--                app:layout_constraintHorizontal_bias="0.021"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent" />-->
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/notificationSwitch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_marginEnd="8dp"
-                android:thumb="@drawable/custom_thumb"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:track="@drawable/custom_track" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
+<!--            <androidx.appcompat.widget.SwitchCompat-->
+<!--                android:id="@+id/notificationSwitch"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_alignParentEnd="true"-->
+<!--                android:layout_marginEnd="8dp"-->
+<!--                android:thumb="@drawable/custom_thumb"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent"-->
+<!--                app:track="@drawable/custom_track" />-->
+<!--        </androidx.constraintlayout.widget.ConstraintLayout>-->
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/aboutBtn"
