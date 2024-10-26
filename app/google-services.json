@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "151064210721",
+    "firebase_url": "https://up-oblation-diorama-app-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "up-oblation-diorama-app",
+    "storage_bucket": "up-oblation-diorama-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:151064210721:android:fbe6b17542be46d2a8e260",
+        "android_client_info": {
+          "package_name": "net.techcndev.upoblationdioramaapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "151064210721-ds7q4i1es2k34u1g9rq2ja82jshbhbev.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "net.techcndev.upoblationdioramaapp",
+            "certificate_hash": "c4aeef6c0b551eaaf38d9d90636356db9292ed99"
+          }
+        },
+        {
+          "client_id": "151064210721-qfog3iubl6lgb6mq7tdm6o0gj9ij2sg0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqWFohe63HlFyPWSCTTFiuxV5M6F3SXKE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "151064210721-qfog3iubl6lgb6mq7tdm6o0gj9ij2sg0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
