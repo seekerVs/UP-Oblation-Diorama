@@ -57,6 +57,7 @@
         <action
             android:id="@+id/action_settingsFragment3_to_signinFragment"
             app:destination="@id/signinFragment"
+            app:popUpTo="@id/signinFragment"
             app:enterAnim="@android:anim/fade_in"
             app:exitAnim="@android:anim/fade_out"/>
     </fragment>
@@ -68,6 +69,8 @@
         <action
             android:id="@+id/action_signinFragment_to_dashboardFragment"
             app:destination="@id/dashboardFragment"
+            app:popUpTo="@id/signinFragment"
+            app:popUpToInclusive="true"
             app:enterAnim="@anim/pop_in"
             app:exitAnim="@anim/pop_out"/>
     </fragment>

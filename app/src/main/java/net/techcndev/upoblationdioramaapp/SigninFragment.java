@@ -41,12 +41,17 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 import com.nordan.dialog.Animation;
 import com.nordan.dialog.NordanAlertDialog;
 import com.nordan.dialog.NordanAlertDialogListener;
 import com.nordan.dialog.DialogType;
 
 import net.techcndev.upoblationdioramaapp.databinding.FragmentSigninBinding;
+
+import java.util.Objects;
 
 
 public class SigninFragment extends Fragment {
@@ -162,7 +167,7 @@ public class SigninFragment extends Fragment {
                         if (task.isSuccessful()) {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential:success");
-                            Navigation.findNavController(requireView()).navigate(R.id.action_signinFragment_to_dashboardFragment);
+                            checkDevice();
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
@@ -173,6 +178,39 @@ public class SigninFragment extends Fragment {
                         hideProgressBar();
                     }
                 });
+    }
+
+    private void checkDevice() {
+        String current_email = mAuth.getCurrentUser().getEmail();
+        if (current_email != null && !current_email.isBlank()) {
+            globalObject.rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
+                        String value = childSnapshot.child("registeredUser").getValue(String.class);
+
+                        if (Objects.equals(value, current_email)) {
+                            // If the value matches, do something
+                            editor.putString("user_device", childSnapshot.getKey());
+                            editor.commit();
+                            Log.d(LOG_TAG, "Node with specific value found: " + childSnapshot.getKey());
+                            break;
+                        }
+                    }
+                    String user_device = sharedPreferences.getString("user_device", "");
+                    if (!user_device.isBlank()) {
+                        Navigation.findNavController(requireView()).navigate(R.id.action_signinFragment_to_dashboardFragment);
+                    } else {
+                        showDialog(DialogType.INFORMATION, "No Linked Device", "In Settings, scan your device QR code to link your device to UP Oblation Diorama App.", Animation.POP, true, "OK");
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    Log.d("FirebaseData", "Database error: " + databaseError.getMessage());
+                }
+            });
+        }
     }
 
     private void hideProgressBar() {
@@ -280,8 +318,6 @@ public class SigninFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         globalObject.unregisterListener();
-        binding = null;
     }
-
 
 }

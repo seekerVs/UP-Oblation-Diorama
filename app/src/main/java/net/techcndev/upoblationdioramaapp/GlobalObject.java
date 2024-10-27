@@ -59,7 +59,7 @@ public class GlobalObject {
         preferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                Log.d(LOG_TAG, "Preference changed: " + key);
+                Log.d(LOG_TAG, "GlobalObject SharedPreference changed: " + key);
                 if (key.equals("user_device")) {
                     init_database_refs();
                 }

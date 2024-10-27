@@ -264,6 +264,8 @@ public class SettingsFragment extends Fragment {
         new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
+                stopBackgroundService();
+
                 editor.putString("user_device", "");
                 editor.commit();
                 editor.putBoolean("isWelcomed", false);
@@ -293,6 +295,5 @@ public class SettingsFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         globalObject.unregisterListener();
-        binding = null;
     }
 }

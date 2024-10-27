@@ -23,6 +23,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Objects;
+
 public class ForegroundService extends Service {
 
     private static final String LOG_TAG = ForegroundService.class.getSimpleName();
@@ -49,7 +51,7 @@ public class ForegroundService extends Service {
         globalObject = new GlobalObject(getApplicationContext());
         notificationManager = NotificationManagerCompat.from(this);
 
-        sharedPreferences = getSharedPreferences("PREFS_NAME", MODE_PRIVATE);
+        sharedPreferences = getApplicationContext().getSharedPreferences("PREFS_NAME", MODE_PRIVATE);
         editor = sharedPreferences.edit();
 
         createNotificationChannels();
@@ -60,8 +62,9 @@ public class ForegroundService extends Service {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     try {
+                        Log.d(LOG_TAG, "Foreground Battery Percentage: " + snapshot.getValue(Long.class));
                         String userDevice = sharedPreferences.getString("user_device", "");
-                        if (snapshot.getValue(Integer.class) < 70) {
+                        if (snapshot.getValue(Long.class) < 70) {
                             setWarningNotification("Device Batttery is LOW", "Please charge your device \"" + userDevice + "\"");
                         }
                     } catch (Exception e) {
@@ -80,6 +83,7 @@ public class ForegroundService extends Service {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
+                    Log.d(LOG_TAG, "Foreground Power Source: " + snapshot.getValue(String.class));
                     try {
                         setReminderNotification("Power Source", "Power source changed to " + snapshot.getValue(String.class).toUpperCase());
                     } catch (Exception e) {
@@ -99,10 +103,9 @@ public class ForegroundService extends Service {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     try {
+                        Log.d(LOG_TAG, "Foreground Water Level: " + snapshot.getValue(String.class));
                         String userDevice = sharedPreferences.getString("user_device", "");
-                        if (snapshot.getValue(Integer.class) < 70) {
-                            setWarningNotification("Fountain Water Level", "\"" + userDevice + "\"" + "fountain water level is " + snapshot.getValue(String.class).toUpperCase());
-                        }
+                        setWarningNotification("Fountain Water Level", "\"" + userDevice + "\"" + "fountain water level is " + snapshot.getValue(String.class).toUpperCase());
                     } catch (Exception e) {
                         Log.d(LOG_TAG, "Error: " + e);
                     }
@@ -114,6 +117,8 @@ public class ForegroundService extends Service {
                 Log.d(LOG_TAG, "Error: " + error.getMessage());
             }
         });
+
+        Log.d(LOG_TAG, "Service Started");
     }
 
     @Override
@@ -147,7 +152,7 @@ public class ForegroundService extends Service {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-
+        notificationManager.notify(1, notification);
     }
 
     public void setWarningNotification(String title, String message) {
@@ -210,7 +215,7 @@ public class ForegroundService extends Service {
         return new NotificationCompat.Builder(this, CHANNEL_3_ID)
                 .setSmallIcon(R.mipmap.ic_launcher_round)
                 .setContentTitle("UP Oblation Diorama App")
-                .setContentText("Background Service of UP Oblation Diorama App App is running...")
+                .setContentText("Background Service of UP Oblation Diorama App is running...")
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)

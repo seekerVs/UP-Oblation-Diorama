@@ -49,9 +49,6 @@ public class DashboardFragment extends Fragment {
     SharedPreferences.Editor editor;
 
     private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
-
-    String user_device;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -63,6 +60,7 @@ public class DashboardFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        Log.d(LOG_TAG, LOG_TAG + " onViewCreated");
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
 
@@ -98,6 +96,7 @@ public class DashboardFragment extends Fragment {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
+                    Log.d(LOG_TAG, "Power Source: " + snapshot.getValue(String.class));
                     binding.powerText.setText(snapshot.getValue(String.class));
                 }
             }
@@ -140,6 +139,7 @@ public class DashboardFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
+        Log.d(LOG_TAG, LOG_TAG + " onAttach");
         globalObject = new GlobalObject(context.getApplicationContext());
         sharedPreferences = context.getSharedPreferences("PREFS_DATA", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
@@ -152,21 +152,20 @@ public class DashboardFragment extends Fragment {
         if (!sharedPreferences.getBoolean("isWelcomed", false)) {
             editor.putBoolean("isWelcomed", true);
             editor.commit();
-            showDialog(DialogType.SUCCESS, "Sign-in Success", "Welcome to UP Oblation Diorama App!", Animation.POP, true, "NICE");
+            showDialog(DialogType.SUCCESS, "Sign in Success", "Welcome to UP Oblation Diorama App!", Animation.POP, true, "NICE");
         }
     }
 
     private void startBackgroundService() {
         try {
+            Log.d(LOG_TAG, "startBackgroundService");
+            String user_device = sharedPreferences.getString("user_device", "");
             if (!user_device.isBlank()) {
-                boolean status = sharedPreferences.getBoolean("is_notif_enabled", false);
-                Log.d(LOG_TAG, "InventoryActivity isNotifEnabled: " + status + ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+                boolean isNotifEnabled = sharedPreferences.getBoolean("is_notif_enabled", false);
+                Log.d(LOG_TAG, "InventoryActivity isNotifEnabled: " + isNotifEnabled + ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
-                if (status) {
+                if (isNotifEnabled) {
                     if (!isServiceRunning(ForegroundService.class)) {
-                        // if notif is on and service is not running, start service
-                        editor.putBoolean("is_notif_enabled", true);
-                        editor.commit();
                         Context context = getContext();
                         Intent intent = new Intent(getActivity(), ForegroundService.class);
 
@@ -191,37 +190,6 @@ public class DashboardFragment extends Fragment {
         return false;
     }
 
-    private void checkDevice() {
-        String current_email = mAuth.getCurrentUser().getEmail();
-        if (current_email != null) {
-            globalObject.rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
-                        String value = childSnapshot.child("registeredUser").getValue(String.class);
-
-                        if (Objects.equals(value, current_email)) {
-                            // If the value matches, do something
-                            editor.putString("user_device", childSnapshot.getKey());
-                            editor.commit();
-                            Log.d("FirebaseData", "Node with specific value found: " + childSnapshot.getKey());
-                            break;
-                        }
-                    }
-                    user_device = sharedPreferences.getString("user_device", "");
-                    if (user_device.isBlank()) {
-                        showDialog(DialogType.INFORMATION, "No Linked Device", "In Settings, scan your device QR code to link your device to UP Oblation Diorama App.", Animation.POP, true, "OK");
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    Log.d("FirebaseData", "Database error: " + databaseError.getMessage());
-                }
-            });
-        }
-    }
-
     private void checkInternetConnectivity() {
         if (!globalObject.isReliableInternetAvailable()) {
             showDialog(DialogType.WARNING, "No Internet Connection", "Please check your internet connection.", Animation.POP, true, "OK");
@@ -230,7 +198,7 @@ public class DashboardFragment extends Fragment {
 
     private void checkAuthenticatedUser() {
         try {
-            currentUser = mAuth.getCurrentUser();
+            FirebaseUser currentUser = mAuth.getCurrentUser();
             if (currentUser == null) {
                 Log.d(LOG_TAG, "JUST A NORMAL DAY CAPTAIN!");
                 Navigation.findNavController(requireView()).navigate(R.id.action_dashboardFragment_to_signinFragment);
@@ -239,7 +207,6 @@ public class DashboardFragment extends Fragment {
                 String current_name = WordUtils.capitalizeFully(mAuth.getCurrentUser().getDisplayName());
                 binding.usernameText.setText(current_name);
                 checkInternetConnectivity();
-                checkDevice();
             }
         } catch (Exception e){
             Log.d(LOG_TAG, "Catch Error in DashboardFragment OnCreate: " + e);
@@ -262,7 +229,7 @@ public class DashboardFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        Log.d(LOG_TAG, LOG_TAG + " onDestroyView");
         globalObject.unregisterListener();
-        binding = null;
     }
 }

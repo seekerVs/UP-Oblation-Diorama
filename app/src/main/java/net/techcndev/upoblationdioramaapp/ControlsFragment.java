@@ -149,6 +149,5 @@ public class ControlsFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
 //        globalObject.unregisterListener();
-        binding = null;
     }
 }
