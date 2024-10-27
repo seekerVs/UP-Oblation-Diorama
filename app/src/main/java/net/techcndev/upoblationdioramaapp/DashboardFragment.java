@@ -1,6 +1,8 @@
 package net.techcndev.upoblationdioramaapp;
 
+import android.app.ActivityManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
@@ -48,6 +50,8 @@ public class DashboardFragment extends Fragment {
 
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
+
+    String user_device;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -130,7 +134,7 @@ public class DashboardFragment extends Fragment {
                 v -> Navigation.findNavController(v).navigate(R.id.action_dashboardFragment_to_settingsFragment2));
 
         checkAuthenticatedUser();
-//        tryFirebase();
+        startBackgroundService();
     }
 
     @Override
@@ -152,6 +156,41 @@ public class DashboardFragment extends Fragment {
         }
     }
 
+    private void startBackgroundService() {
+        try {
+            if (!user_device.isBlank()) {
+                boolean status = sharedPreferences.getBoolean("is_notif_enabled", false);
+                Log.d(LOG_TAG, "InventoryActivity isNotifEnabled: " + status + ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+
+                if (status) {
+                    if (!isServiceRunning(ForegroundService.class)) {
+                        // if notif is on and service is not running, start service
+                        editor.putBoolean("is_notif_enabled", true);
+                        editor.commit();
+                        Context context = getContext();
+                        Intent intent = new Intent(getActivity(), ForegroundService.class);
+
+                        if (context != null) {
+                            context.startForegroundService(intent);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.d(LOG_TAG, "startBackgroundService: " + e);
+        }
+    }
+
+    private boolean isServiceRunning(Class<ForegroundService> serviceClass) {
+        ActivityManager activityManager = (ActivityManager) requireActivity().getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo serviceInfo : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceInfo.service.getClassName().equals(serviceClass.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void checkDevice() {
         String current_email = mAuth.getCurrentUser().getEmail();
         if (current_email != null) {
@@ -169,7 +208,7 @@ public class DashboardFragment extends Fragment {
                             break;
                         }
                     }
-                    String user_device = sharedPreferences.getString("user_device", "");
+                    user_device = sharedPreferences.getString("user_device", "");
                     if (user_device.isBlank()) {
                         showDialog(DialogType.INFORMATION, "No Linked Device", "In Settings, scan your device QR code to link your device to UP Oblation Diorama App.", Animation.POP, true, "OK");
                     }

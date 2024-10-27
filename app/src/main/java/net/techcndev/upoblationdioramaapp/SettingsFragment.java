@@ -1,7 +1,9 @@
 package net.techcndev.upoblationdioramaapp;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -15,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
@@ -48,9 +51,10 @@ public class SettingsFragment extends Fragment {
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
 
-    private String userEmail;
-
     GlobalObject globalObject;
+
+    private String userEmail;
+    String user_device;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -73,6 +77,8 @@ public class SettingsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        user_device = sharedPreferences.getString("user_device", "");
+
         binding.settingsBackBtn.setOnClickListener(v ->
                 Navigation.findNavController(v).navigate(R.id.action_settingsFragment_to_dashboardFragment2));
 
@@ -80,14 +86,42 @@ public class SettingsFragment extends Fragment {
                 Navigation.findNavController(v).navigate(R.id.action_settingsFragment3_to_aboutFragment));
 
         binding.logoutBtn.setOnClickListener(v -> {
-            signOut();
-            Navigation.findNavController(v).navigate(R.id.action_settingsFragment3_to_signinFragment);
+            new NordanAlertDialog.Builder(requireActivity())
+                    .setDialogType(DialogType.QUESTION)
+                    .setAnimation(Animation.POP)
+                    .setTitle("Sign out")
+                    .setMessage("Continue to Sign out?")
+                    .setPositiveBtnText("YES")
+                    .setNegativeBtnText("NO")
+                    .onPositiveClicked(()->signOut(v))
+                    .onNegativeClicked(()-> Snackbar.make(binding.mainLayout, "Sign out cancelled", Snackbar.LENGTH_SHORT).show())
+                    .build().show();
         });
 
         binding.contextMenuImageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                     showPopupMenu(v);
+            }
+        });
+
+        binding.notificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (!user_device.isBlank()) {
+                    if (isChecked) {
+                        editor.putBoolean("is_notif_enabled", true);
+                        editor.commit();
+                        startBackgroundService();
+                        Snackbar.make(binding.mainLayout, "Notification Enabled", Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        editor.putBoolean("is_notif_enabled", false);
+                        editor.commit();
+                        stopBackgroundService();
+                        Snackbar.make(binding.mainLayout, "Notification Disabled", Snackbar.LENGTH_SHORT).show();
+                    }
+                    Log.d(LOG_TAG, "isChecked: " + isChecked);
+                }
             }
         });
 
@@ -98,12 +132,31 @@ public class SettingsFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         userEmail = mAuth.getCurrentUser().getEmail();
 
-        String user_device = sharedPreferences.getString("user_device", "");
-        if (!user_device.isEmpty()) {
+        if (!user_device.isBlank()) {
             binding.deviceNameTextview.setText(user_device);
         }
 
+        boolean status = sharedPreferences.getBoolean("is_notif_enabled",false);
+        binding.notificationSwitch.setChecked(status);
+
         binding.emailTextview.setText(mAuth.getCurrentUser().getEmail());
+    }
+
+    private void startBackgroundService() {
+        Context context = getContext();
+        Intent intent = new Intent(getActivity(), ForegroundService.class);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent);
+        } else {
+            context.startService(intent);
+        }
+    }
+
+    private void stopBackgroundService() {
+        Context context = getContext();
+        Intent intent = new Intent(getActivity(), ForegroundService.class);
+        context.stopService(intent);
     }
 
     private void showPopupMenu(View view) {
@@ -116,7 +169,7 @@ public class SettingsFragment extends Fragment {
 
             if (itemId == R.id.change_device) {
                 if (globalObject.isReliableInternetAvailable()) {
-                    Toast.makeText(getActivity(), "Change device", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(getActivity(), "Change device", Toast.LENGTH_SHORT).show();
                     scanCode();
                     return true;
                 } else {
@@ -126,7 +179,7 @@ public class SettingsFragment extends Fragment {
 
             } else if (itemId == R.id.remove_device) {
                 if (globalObject.isReliableInternetAvailable()) {
-                    Toast.makeText(getActivity(), "Remove device", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(getActivity(), "Remove device", Toast.LENGTH_SHORT).show();
                     removeDevice();
                     return true;
                 } else {
@@ -202,7 +255,7 @@ public class SettingsFragment extends Fragment {
             showDialog(DialogType.WARNING, "Device Remove Failed", "Please check your internet connection.", Animation.POP, true, "OK");
         }
     }
-    private void signOut() {
+    private void signOut(View v) {
         // Firebase sign out
         mAuth.signOut();
 
@@ -213,6 +266,12 @@ public class SettingsFragment extends Fragment {
             public void onComplete(@NonNull Task<Void> task) {
                 editor.putString("user_device", "");
                 editor.commit();
+                editor.putBoolean("isWelcomed", false);
+                editor.commit();
+                editor.putBoolean("is_notif_enabled", false);
+                editor.commit();
+
+                Navigation.findNavController(v).navigate(R.id.action_settingsFragment3_to_signinFragment);
                 showDialog(DialogType.SUCCESS, "Sign-out Success", "You have successfully signed out.", Animation.POP, true, "OK");
             }
         });
@@ -227,7 +286,6 @@ public class SettingsFragment extends Fragment {
                 .setTitle(title)
                 .setMessage(message)
                 .setPositiveBtnText(btnPos)
-                .onPositiveClicked(() -> Toast.makeText(requireContext(), btnPos, Toast.LENGTH_SHORT).show())
                 .build().show();
     }
 

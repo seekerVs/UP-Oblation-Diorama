@@ -1,12 +1,11 @@
 package net.techcndev.upoblationdioramaapp;
 
-import static net.techcn.solarricerakeapp.App.CHANNEL_1_ID;
-
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -20,48 +19,23 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.text.DecimalFormat;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
-
 public class ForegroundService extends Service {
 
-    Timer timer;
     private static final String LOG_TAG = ForegroundService.class.getSimpleName();
-    private boolean running = false;
+
+    public static final String CHANNEL_1_ID = "channel1";
+    public static final String CHANNEL_2_ID = "channel2";
+    public static final String CHANNEL_3_ID = "channel3";
 
     private NotificationManagerCompat notificationManager;
 
-    private final String url = "https://api.openweathermap.org/data/2.5/weather";
-    private final String appid = "e53301e27efa0b66d05045d91b2742d3";
-    DecimalFormat df = new DecimalFormat("#.##");
-
-    String warningMessage = "It looks like weather is not good today. Please take necessary precautions to protect the crops and SolarRiceRake Device.";
-    String reminderMessage = "The weather is good today. It is the best time to dry your rice harvest using SolarRiceRake Device.";
-    String alertMessage = "Extreme weather condition detected. Please take necessary precautions to protect the crops and SolarRiceRake Device.";
-
     GlobalObject globalObject;
-
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
 
     @Nullable
     @Override
@@ -73,167 +47,78 @@ public class ForegroundService extends Service {
     public void onCreate() {
         super.onCreate();
         globalObject = new GlobalObject(getApplicationContext());
-
-        timer = new Timer();
         notificationManager = NotificationManagerCompat.from(this);
-        createNotificationChannel();
-        startForeground(1, buildNotification());
-        launchWeatherNotification();
-    }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (!running) {
-            running = true;
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        initiateWeatherMonitoring();
-                    } catch (Exception e) {
-                        Log.e("DashboardFragment", e.toString().trim());
-                    }
-                }
-            }, 0, 10000);
-        }
+        sharedPreferences = getSharedPreferences("PREFS_NAME", MODE_PRIVATE);
+        editor = sharedPreferences.edit();
 
-        return super.onStartCommand(intent, flags, startId);
-    }
+        createNotificationChannels();
+        startForeground(3, serviceNotification());
 
-    private void launchWeatherNotification() {
-        globalObject.lastForecastRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        globalObject.batteryPercentRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
-                    String value = snapshot.getValue(String.class);
-                    switch (value) {
-                        case "mist":
-                        case "smoke":
-                        case "haze":
-                        case "fog":
-                        case "overcast clouds":
-                        case "broken clouds":
-                            sendWarningNotification(value);
-                            break;
-                        case "clear sky":
-                        case "few clouds":
-                        case "scattered clouds":
-                            sendReminderNotification(value);
-                            break;
-                        default:
-                            sendAlertNotification(value);
-                            break;
+                    try {
+                        String userDevice = sharedPreferences.getString("user_device", "");
+                        if (snapshot.getValue(Integer.class) < 70) {
+                            setWarningNotification("Device Batttery is LOW", "Please charge your device \"" + userDevice + "\"");
+                        }
+                    } catch (Exception e) {
+                        Log.d(LOG_TAG, "Error: " + e);
                     }
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(LOG_TAG, error.toString().trim());
+                Log.d(LOG_TAG, "Error: " + error.getMessage());
             }
         });
-    }
 
-    public void initiateWeatherMonitoring() {
-        String latitude = "14.1122";
-        String longitude = "122.9553";
-        String tempUrl = url + "?lat=" + latitude + "&lon=" + longitude + "&appid=" + appid;
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, tempUrl, new Response.Listener<String>() {
+        globalObject.powerSourceRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject jsonResponse = new JSONObject(response);
-                    JSONArray jsonArray = jsonResponse.getJSONArray("weather");
-                    JSONObject jsonObjectWeather = jsonArray.getJSONObject(0);
-                    String mainDescription = jsonObjectWeather.getString("main");
-                    String description = jsonObjectWeather.getString("description");
-                    JSONObject jsonObjectMain = jsonResponse.getJSONObject("main");
-                    double temp = jsonObjectMain.getDouble("temp") - 273.15;
-//                    double feelsLike = jsonObjectMain.getDouble("feels_like") - 273.15;
-//                    float pressure = jsonObjectMain.getInt("pressure");
-//                    int humidity = jsonObjectMain.getInt("humidity");
-//                    JSONObject jsonObjectWind = jsonResponse.getJSONObject("wind");
-//                    String wind = jsonObjectWind.getString("speed");
-//                    JSONObject jsonObjectClouds = jsonResponse.getJSONObject("clouds");
-//                    String clouds = jsonObjectClouds.getString("all");
-
-                    String msg = "";
-                    // send notification if weather is not good
-                    if (mainDescription.equals("Mist") || mainDescription.equals("Smoke") || mainDescription.equals("Haze") || mainDescription.equals("Fog") || description.equals("overcast clouds") || description.equals("broken clouds")) {
-//                        Log.d(LOG_TAG, "Weather is not good");
-                        msg = "Weather Forecast: " + description + "\n" + warningMessage;
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    try {
+                        setReminderNotification("Power Source", "Power source changed to " + snapshot.getValue(String.class).toUpperCase());
+                    } catch (Exception e) {
+                        Log.d(LOG_TAG, "Error: " + e);
                     }
-                    // else send notification if weather is good
-                    else if (mainDescription.equals("Clear") || description.equals("few clouds") || description.equals("scattered clouds")) {
-//                        Log.d(LOG_TAG, "Weather is good");
-                        msg = "Weather Forecast: " + description + "\n" + reminderMessage;
-                    } else {
-//                        Log.d(LOG_TAG, "Extreme weather condition detected");
-                        msg = "Weather Forecast: " + description + "\n" + alertMessage;
-                    }
-
-                    String finalMsg = msg;
-                    globalObject.lastForecastRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            if (dataSnapshot.exists()) {
-                                String value = dataSnapshot.getValue(String.class);
-//                                Log.d(LOG_TAG, "Value is: " + value);
-//                                Log.d(LOG_TAG, "Description is: " + description);
-//                                Log.d(LOG_TAG, "value == null: " + (value == null));
-//                                Log.d(LOG_TAG, "!(value.equals(description)): " + (!(value.equals(description))));
-                                if (!(value.equals(description))) {
-                                    globalObject.lastForecastRef.setValue(description);
-
-                                    launchWeatherNotification();
-
-                                    String dateKey = getDate();
-                                    HashMap<String, Object> dataToSave = new HashMap<>();
-                                    dataToSave.put("timestamp", dateKey);
-                                    dataToSave.put("forecast", description);
-                                    dataToSave.put("temperature", String.format("%s °C", df.format(temp)));
-                                    globalObject.weatherReportRef.child(dateKey).setValue(dataToSave).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> task) {
-                                            HashMap<String, Object> notifToSave = new HashMap<>();
-                                            notifToSave.put("timestamp", dateKey);
-                                            notifToSave.put("message", finalMsg);
-                                            notifToSave.put("title", "Weather Report");
-                                            globalObject.notifRef.child(dateKey).setValue(notifToSave);
-                                        }
-                                    });
-                                }
-                            } else {
-                                globalObject.lastForecastRef.setValue(description);
-                                Log.e(LOG_TAG, "No data available");
-                            }
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            // Handle errors
-                        }
-                    });
-
-                } catch (JSONException e) {
-                    Log.e("DashboardFragment", e.toString().trim());
                 }
             }
-        }, new Response.ErrorListener(){
 
             @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("DashboardFragment", error.toString().trim());
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d(LOG_TAG, "Error: " + error.getMessage());
             }
         });
-        RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
-        requestQueue.add(stringRequest);
+
+        globalObject.waterLevelRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    try {
+                        String userDevice = sharedPreferences.getString("user_device", "");
+                        if (snapshot.getValue(Integer.class) < 70) {
+                            setWarningNotification("Fountain Water Level", "\"" + userDevice + "\"" + "fountain water level is " + snapshot.getValue(String.class).toUpperCase());
+                        }
+                    } catch (Exception e) {
+                        Log.d(LOG_TAG, "Error: " + e);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d(LOG_TAG, "Error: " + error.getMessage());
+            }
+        });
     }
 
-    private String getDate() {
-        Instant instant = Instant.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd;HH:mm:ss·SSS").withZone(ZoneId.systemDefault());
-        return formatter.format(instant);
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
     }
 
     @Override
@@ -241,14 +126,37 @@ public class ForegroundService extends Service {
         super.onDestroy();
     }
 
+    private void setReminderNotification(String title, String message) {
+        Bitmap img = BitmapFactory.decodeResource(getResources(), R.drawable.information);
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_2_ID)
+                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                .build();
 
-    public void sendWarningNotification(String message) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+
+    }
+
+    public void setWarningNotification(String title, String message) {
         Bitmap img = BitmapFactory.decodeResource(getResources(), R.drawable.warning);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_1_ID)
                 .setLargeIcon(img)
                 .setSmallIcon(R.mipmap.ic_launcher_round)
-                .setContentTitle("Weather Report")
-                .setContentText("Weather Forecast: " + message + "\n" + warningMessage)
+                .setContentTitle(title)
+                .setContentText(message)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -267,76 +175,46 @@ public class ForegroundService extends Service {
         notificationManager.notify(2, notification);
     }
 
-    public void sendAlertNotification(String message) {
-        Bitmap img = BitmapFactory.decodeResource(getResources(), R.drawable.warning);
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_1_ID)
-                .setLargeIcon(img)
+    private void createNotificationChannels() {
+        NotificationChannel channel1 = new NotificationChannel(
+                CHANNEL_1_ID,
+                "System Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+        );
+        channel1.setDescription("For app system alerts");
+        channel1.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+        NotificationChannel channel2 = new NotificationChannel(
+                CHANNEL_2_ID,
+                "Device Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+        );
+        channel2.setDescription("For linked device alerts");
+        channel2.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+        NotificationChannel channel3 = new NotificationChannel(
+                CHANNEL_3_ID,
+                "Device Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+        );
+        channel3.setDescription("For linked device alerts");
+        channel3.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        manager.createNotificationChannel(channel1);
+        manager.createNotificationChannel(channel2);
+        manager.createNotificationChannel(channel3);
+    }
+
+    private Notification serviceNotification() {
+        return new NotificationCompat.Builder(this, CHANNEL_3_ID)
                 .setSmallIcon(R.mipmap.ic_launcher_round)
-                .setContentTitle("Weather Report")
-                .setContentText("Weather Forecast: " + message + "\n" + alertMessage)
-                .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setContentTitle("UP Oblation Diorama App")
+                .setContentText("Background Service of UP Oblation Diorama App App is running...")
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .build();
-
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        notificationManager.notify(2, notification);
     }
 
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    "General", "General", NotificationManager.IMPORTANCE_LOW);
-            channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
-
-    private Notification buildNotification() {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "General");
-        builder.setSmallIcon(R.mipmap.ic_launcher_round);
-        builder.setContentTitle("SolarRiceRake App");
-        builder.setContentText("Background Service of SolarRiceRake App is running...");
-        builder.setOngoing(true);
-        builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
-        return builder.build();
-    }
-
-    private void sendReminderNotification(String message) {
-        Bitmap img = BitmapFactory.decodeResource(getResources(), R.drawable.warning);
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_1_ID)
-                .setLargeIcon(img)
-                .setSmallIcon(R.mipmap.ic_launcher_round)
-                .setContentTitle("Weather Report")
-                .setContentText("Weather Forecast: " + message + "\n" + reminderMessage)
-                .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(NotificationCompat.CATEGORY_REMINDER)
-                .build();
-
-        if (notificationManager.areNotificationsEnabled()) {
-            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            notificationManager.notify(2, notification);
-        }
-    }
 }
