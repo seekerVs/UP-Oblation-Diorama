@@ -89,9 +89,42 @@
                     android:layout_weight="1"
                     android:inputType="none"
                     android:textSize="16sp"
-                    android:text="Normal Mode"
+                    android:text="Ambient Mode"
                     />
             </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/volumeLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_columnSpan="2"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:orientation="vertical"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            app:layout_constraintTop_toBottomOf="@+id/modeDropdown"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:text="Speaker Volume"
+                android:textColor="#9A948D"
+                android:textSize="12sp"
+                android:textStyle="bold"/>
+
+            <SeekBar
+                android:id="@+id/volumeSeekbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:progressDrawable="@drawable/custom_seekbar_progress"
+                android:thumb="@drawable/custom_seekbar_thumb"
+                android:soundEffectsEnabled="true" />
         </LinearLayout>
 
         <TextView
@@ -103,7 +136,7 @@
             android:textAlignment="textStart"
             android:textSize="16sp"
             android:paddingStart="20dp"
-            app:layout_constraintTop_toBottomOf="@+id/modeDropdown"
+            app:layout_constraintTop_toBottomOf="@+id/volumeLayout"
             app:layout_constraintStart_toStartOf="parent" />
 
         <ScrollView
@@ -126,34 +159,6 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_columnSpan="2"
-                    android:layout_rowWeight="1"
-                    android:layout_columnWeight="1"
-                    android:orientation="vertical"
-                    android:layout_margin="10dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp"
-                        android:text="Speaker Volume"
-                        android:textColor="#9A948D"
-                        android:textSize="12sp"
-                        android:textStyle="bold"/>
-
-                    <SeekBar
-                        android:id="@+id/volumeSeekbar"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:max="100"
-                        android:progressDrawable="@drawable/custom_seekbar_progress"
-                        android:thumb="@drawable/custom_seekbar_thumb"
-                        android:soundEffectsEnabled="true" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:layout_columnSpan="2"
                     android:layout_rowWeight="1"
@@ -170,6 +175,7 @@
                         android:textStyle="bold"/>
 
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/musicInputLayout"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
@@ -204,6 +210,7 @@
                         android:textStyle="bold"/>
 
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/leftWaterInputLayout"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
@@ -238,6 +245,7 @@
                         android:textStyle="bold"/>
 
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/rightWaterInputLayout"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
@@ -272,6 +280,7 @@
                         android:textStyle="bold"/>
 
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/leftLaserInputLayout"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
@@ -306,6 +315,7 @@
                         android:textStyle="bold"/>
 
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/rightLaserInputLayout"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
@@ -333,24 +343,25 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="5dp"
-                        android:text="Spotlight &amp; Lightpost Left"
+                        android:text="Spotlight"
                         android:textColor="#9A948D"
                         android:textSize="12sp"
                         android:textStyle="bold"/>
 
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/spotlightInputLayout"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
                         <AutoCompleteTextView
-                            android:id="@+id/lightspotLeftTextView"
+                            android:id="@+id/spotlightTextView"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:inputType="none"
                             android:textSize="16sp"
-                            android:text="Steady"
+                            android:text="On"
                             />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
@@ -367,24 +378,25 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="5dp"
-                        android:text="Spotlight &amp; Lightpost Right"
+                        android:text="Lightpost"
                         android:textColor="#9A948D"
                         android:textSize="12sp"
                         android:textStyle="bold"/>
 
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/lightpostInputLayout"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
                         <AutoCompleteTextView
-                            android:id="@+id/lightspotRightTextView"
+                            android:id="@+id/lightpostTextView"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:inputType="none"
                             android:textSize="16sp"
-                            android:text="Steady" />
+                            android:text="On" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </GridLayout>

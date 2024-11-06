@@ -126,7 +126,6 @@ public class SigninFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-
         sharedPreferences = context.getSharedPreferences("PREFS_DATA", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
 
@@ -238,6 +237,7 @@ public class SigninFragment extends Fragment {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         Log.e(TAG, "Google Sign-in failed", e);
+                        Snackbar.make(binding.mainLayout, "Google Sign-in failed", Snackbar.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -308,7 +308,7 @@ public class SigninFragment extends Fragment {
                 .onPositiveClicked(new NordanAlertDialogListener() {
                     @Override
                     public void onClick() {
-                        Toast.makeText(requireContext(), "Positive button clicked", Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(requireContext(), "Positive button clicked", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .build().show();

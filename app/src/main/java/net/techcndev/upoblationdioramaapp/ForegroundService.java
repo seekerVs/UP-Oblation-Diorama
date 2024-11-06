@@ -36,8 +36,6 @@ public class ForegroundService extends Service {
     private NotificationManagerCompat notificationManager;
 
     GlobalObject globalObject;
-    SharedPreferences sharedPreferences;
-    SharedPreferences.Editor editor;
 
     @Nullable
     @Override
@@ -51,9 +49,6 @@ public class ForegroundService extends Service {
         globalObject = new GlobalObject(getApplicationContext());
         notificationManager = NotificationManagerCompat.from(this);
 
-        sharedPreferences = getApplicationContext().getSharedPreferences("PREFS_NAME", MODE_PRIVATE);
-        editor = sharedPreferences.edit();
-
         createNotificationChannels();
         startForeground(3, serviceNotification());
 
@@ -63,9 +58,13 @@ public class ForegroundService extends Service {
                 if (snapshot.exists()) {
                     try {
                         Log.d(LOG_TAG, "Foreground Battery Percentage: " + snapshot.getValue(Long.class));
-                        String userDevice = sharedPreferences.getString("user_device", "");
-                        if (snapshot.getValue(Long.class) < 70) {
-                            setWarningNotification("Device Batttery is LOW", "Please charge your device \"" + userDevice + "\"");
+                        Double percent = snapshot.getValue(Double.class);
+                        if (percent != null) {
+                            if (percent < 70) {
+                                setWarningNotification("Device Batttery is LOW", "Please charge your device, " + percent + " percent remaining");
+                            } else if (percent > 90) {
+                                setReminderNotification("Device Batttery is HIGH", "Please unplug the adapter to stop charging, " + percent + " percent remaining");
+                            }
                         }
                     } catch (Exception e) {
                         Log.d(LOG_TAG, "Error: " + e);
@@ -104,8 +103,17 @@ public class ForegroundService extends Service {
                 if (snapshot.exists()) {
                     try {
                         Log.d(LOG_TAG, "Foreground Water Level: " + snapshot.getValue(String.class));
-                        String userDevice = sharedPreferences.getString("user_device", "");
-                        setWarningNotification("Fountain Water Level", "\"" + userDevice + "\"" + "fountain water level is " + snapshot.getValue(String.class).toUpperCase());
+                        String level = snapshot.getValue(String.class);
+                        if (level != null) {
+                            switch (level) {
+                                case "low":
+                                    setWarningNotification("LOW Water Level", "Fountain water level is LOW refill now!");
+                                    break;
+                                case "high":
+                                    setReminderNotification("HIGH Water Level", "Fountain water level is HIGH, release some water!");
+                                    break;
+                            }
+                        }
                     } catch (Exception e) {
                         Log.d(LOG_TAG, "Error: " + e);
                     }
@@ -117,7 +125,6 @@ public class ForegroundService extends Service {
                 Log.d(LOG_TAG, "Error: " + error.getMessage());
             }
         });
-
         Log.d(LOG_TAG, "Service Started");
     }
 

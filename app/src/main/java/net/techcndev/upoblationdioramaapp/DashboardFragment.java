@@ -1,6 +1,7 @@
 package net.techcndev.upoblationdioramaapp;
 
 import android.app.ActivityManager;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +33,7 @@ import com.nordan.dialog.Animation;
 import com.nordan.dialog.DialogType;
 import com.nordan.dialog.NordanAlertDialog;
 import com.nordan.dialog.NordanAlertDialogListener;
+import com.nordan.dialog.NordanLoadingDialog;
 
 import net.techcndev.upoblationdioramaapp.databinding.FragmentDashboardBinding;
 
@@ -49,6 +52,7 @@ public class DashboardFragment extends Fragment {
     SharedPreferences.Editor editor;
 
     private FirebaseAuth mAuth;
+    String userDevice;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -68,7 +72,7 @@ public class DashboardFragment extends Fragment {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
-                    binding.batteryText.setText(String.valueOf(snapshot.getValue()));
+                    binding.batteryText.setText(String.valueOf(snapshot.getValue())+"%");
                 }
             }
 
@@ -117,15 +121,25 @@ public class DashboardFragment extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Snackbar.make(binding.mainLayout, "Error: " + error.getMessage(), Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(binding.getRoot(), "Error: " + error.getMessage(), Snackbar.LENGTH_SHORT).show();
             }
         });
 
         binding.controlsBtn.setOnClickListener(v -> {
+            Log.d(LOG_TAG, "!!!!!!!!!userDevice: " + userDevice);
+            Dialog loading = NordanLoadingDialog.createLoadingDialog(getActivity(), "Loading…");
+            loading.show();
             if (globalObject.isReliableInternetAvailable()) {
-                Navigation.findNavController(v).navigate(R.id.action_dashboardFragment_to_controlsFragment3);
+                if (!userDevice.isBlank()) {
+                    new Handler().postDelayed(loading::hide, 1000);
+                    Navigation.findNavController(v).navigate(R.id.action_dashboardFragment_to_controlsFragment3);
+                } else {
+                    new Handler().postDelayed(loading::hide, 1000);
+                    Snackbar.make(binding.getRoot(), "No Linked Device!", Snackbar.LENGTH_SHORT).show();
+                }
             } else {
-                Snackbar.make(binding.mainLayout, "No Internet Connection", Snackbar.LENGTH_SHORT).show();
+                new Handler().postDelayed(loading::hide, 1000);
+                Snackbar.make(binding.getRoot(), "No Internet Connection", Snackbar.LENGTH_SHORT).show();
             }
         });
 
@@ -140,9 +154,9 @@ public class DashboardFragment extends Fragment {
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         Log.d(LOG_TAG, LOG_TAG + " onAttach");
-        globalObject = new GlobalObject(context.getApplicationContext());
         sharedPreferences = context.getSharedPreferences("PREFS_DATA", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
+        globalObject = new GlobalObject(context.getApplicationContext());
     }
 
     @Override
@@ -159,8 +173,8 @@ public class DashboardFragment extends Fragment {
     private void startBackgroundService() {
         try {
             Log.d(LOG_TAG, "startBackgroundService");
-            String user_device = sharedPreferences.getString("user_device", "");
-            if (!user_device.isBlank()) {
+            userDevice = sharedPreferences.getString("user_device", "");
+            if (!userDevice.isBlank()) {
                 boolean isNotifEnabled = sharedPreferences.getBoolean("is_notif_enabled", false);
                 Log.d(LOG_TAG, "InventoryActivity isNotifEnabled: " + isNotifEnabled + ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
@@ -222,7 +236,6 @@ public class DashboardFragment extends Fragment {
                 .setTitle(title)
                 .setMessage(message)
                 .setPositiveBtnText(btnPos)
-                .onPositiveClicked(() -> Toast.makeText(requireContext(), btnPos, Toast.LENGTH_SHORT).show())
                 .build().show();
     }
 

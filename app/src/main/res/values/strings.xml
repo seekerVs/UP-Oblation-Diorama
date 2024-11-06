@@ -5,7 +5,7 @@
     <string name="client_id">151064210721-qfog3iubl6lgb6mq7tdm6o0gj9ij2sg0.apps.googleusercontent.com</string>
 
     <string-array name="device_modes">
-        <item>Normal Mode</item>
+        <item>Ambient Mode</item>
         <item>Night Mode</item>
         <item>Party Mode</item>
         <item>Christmas Mode</item>
@@ -16,7 +16,9 @@
     <string-array name="component_states">
         <item>Fast Blink</item>
         <item>Slow Blink</item>
+        <item>Random</item>
         <item>Steady</item>
+        <item>Off</item>
     </string-array>
 
     <string-array name="music_names">
@@ -24,5 +26,13 @@
         <item>Christmas Mashup</item>
         <item>Party Mashup</item>
         <item>Ambient</item>
+        <item>Bass Boosted</item>
+        <item>Jose Mari Chan Mashup</item>
+        <item>None</item>
+    </string-array>
+
+    <string-array name="switch_states">
+        <item>On</item>
+        <item>Off</item>
     </string-array>
 </resources>
